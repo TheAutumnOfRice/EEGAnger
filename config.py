@@ -1,4 +1,4 @@
-data_dir = r"F:\AAAAAutumnii\DC\EEG\DATA\anger"
+data_dir = r"C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\EEGAnger"
 data_list = [
 
 ]
