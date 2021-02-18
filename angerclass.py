@@ -1,1 +1,2 @@
-ddd
+class AngerClass:
+    pass
