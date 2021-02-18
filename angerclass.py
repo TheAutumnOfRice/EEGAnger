@@ -1,0 +1,2 @@
+class AngerClass:
+    pass
