@@ -1,0 +1,104 @@
+import scipy.stats as st
+
+from getdata import *
+from preprocess import *
+from psdprocess import *
+
+
+def FixFun(EEG):
+    EPO = make_epoch(EEG, 0, 8)
+    auto_fix(EPO, 2)
+    return EPO
+
+
+class anger:
+    def __init__(self, soft=10, low=20, high=30, time_overlap=150, threshold=0, mode='S4'):
+        self.soft = soft
+        self.low = low
+        self.high = high
+        self.time_overlap = time_overlap
+        self.mode = mode
+        self.output = {}
+        self.peoplename = None
+
+    def loaddata(self, peoplename):
+        self.peoplename = peoplename
+        raw = read_BDF_data(peoplename)
+        raw = eight_channel_mode(raw)
+        events_timepoint, events_id = read_event_data(peoplename, raw.info)
+        event_clips = preprocess_events(events_timepoint, events_id)
+        self.output['event_clips'] = event_clips
+        self.output['raw'] = raw
+
+    def compute(self, soft=10, low=20, high=30, time_overlap=150, mode='S4', fixfun_=True):
+        self.soft = soft
+        self.low = low
+        self.high = high
+        self.time_overlap = time_overlap
+        self.mode = mode
+        event_clips = self.output['event_clips']
+        event_clips[3]["start_time"] -= self.time_overlap
+        event_clips[3]["end_time"] += self.time_overlap
+        raw = self.output['raw']
+        if fixfun_ is True:
+            S = FixFun(crop_by_clip(raw, event_clips, self.mode))
+        else:
+            S = crop_by_clip(raw, event_clips, self.mode)
+        AC = PSDS(S).group_freq(self.low, self.high).average_channel()
+        FC = AC.average_freq(soft=self.soft)
+        FC = trans_to_db(FC)
+        self.output['AC'] = AC
+        self.output['FC'] = FC
+        self.output.setdefault('up', {})
+        self.output.setdefault('down', {})
+        Diff_FC = np.diff(FC)
+        PerTimes = np.diff(AC.times)
+        Grad_FC = Diff_FC / PerTimes
+
+        X = Grad_FC
+        scipy_kde = st.gaussian_kde(X)  # 高斯核密度估计
+        X.sort()
+        dens = scipy_kde.evaluate(X)
+        self.output['dens'] = dens
+        self.output['X'] = X
+        self.output["Grad_FC"] = Grad_FC
+        self.output["PerTimes"] = PerTimes
+
+    def get_truncedExp(self, threshold=0):
+        c1 = self.output['Grad_FC'][self.output['Grad_FC'] >= threshold]
+        c2 = self.output['Grad_FC'][self.output['Grad_FC'] <= threshold]
+        dens = self.output['dens']
+
+        return exp
+
+    def get_middle(self, threshold=0):
+        c1 = self.output['Grad_FC'][self.output['Grad_FC'] >= threshold]
+        c2 = self.output['Grad_FC'][self.output['Grad_FC'] <= threshold]
+        return np.median(c1), np.median(c2)
+
+    def get_average(self, threshold=0):
+        c1 = self.output['Grad_FC'][self.output['Grad_FC'] >= threshold]
+        c2 = self.output['Grad_FC'][self.output['Grad_FC'] <= threshold]
+        return np.average(c1), np.average(c2)
+
+    def drawGrad(self):
+        plt.rcParams['font.sans-serif'] = ['SimHei']
+        plt.rcParams['axes.unicode_minus'] = False
+        plt.plot(self.output['AC'].times[1:self.output['FC'].size], self.output['Grad_FC'], label=self.peoplename)
+
+    def drawkde(self):
+        plt.rcParams['font.sans-serif'] = ['SimHei']
+        plt.rcParams['axes.unicode_minus'] = False
+        plt.plot(self.output['X'], self.output['dens'], label=self.peoplename)
+        plt.tick_params(labelsize=20)
+        font = {'size': 20}
+        plt.xlabel('变量', font)
+        plt.ylabel('概率密度函数', font)
+        plt.legend(fontsize=15)
+
+
+a = anger()
+a.loaddata(peoplename="01zlh")
+a.compute()
+a.drawGrad()
+self = a
