@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, List
 
 import scipy.stats as st
 
@@ -21,23 +21,55 @@ class FixFun:
 
 ###dfs
 class anger:
-    def __init__(self, soft=10, low=20, high=30, time_overlap=150, threshold=0, mode='S4'):
-        self.soft = soft
-        self.low = low
-        self.high = high
-        self.time_overlap = time_overlap
-        self.mode = mode
+    def __init__(self, _a: List["anger"] = None):
+        self.soft = -1
+        self.low = -1
+        self.high = -1
+        self.time_overlap = -1
+        self.mode = ""
         self.output = {}
-        self.peoplename = None
+        self.peoplename = ""
+        self._a = _a
+
+    def _merge(self, check_list):
+        if self._a is None:
+            return None
+        """
+        Check list:
+        [
+            "peoplename",
+            "mode",
+            "time_overlap"
+        ]
+        """
+
+        for a in self._a:
+            flag = False
+            for k in check_list:
+                if getattr(a, k) != getattr(self, k):
+                    flag = True
+                    break
+            if not flag:
+                return a
+        return None
 
     def loaddata(self, peoplename, time_overlap: Union[int, Tuple[int, int]] = 150, mode='S4', fixfun_=None):
         self.peoplename = peoplename
-        raw = read_BDF_data(peoplename)
-        raw = eight_channel_mode(raw)
-        events_timepoint, events_id = read_event_data(peoplename, raw.info)
-        event_clips = preprocess_events(events_timepoint, events_id)
-        self.output['event_clips'] = event_clips
-        self.output['raw'] = raw
+        # Merge Peoplename -> event_clips, raw
+        CL = []
+        CL.append("peoplename")
+        D = self._merge(CL)
+        if D is not None:
+            event_clips = self.output['event_clips'] = D.output["event_clips"]
+            raw = self.output["raw"] = D.output["raw"]
+        else:
+            raw = read_BDF_data(peoplename)
+            raw = eight_channel_mode(raw)
+            events_timepoint, events_id = read_event_data(peoplename, raw.info)
+            event_clips = preprocess_events(events_timepoint, events_id)
+            self.output['event_clips'] = event_clips
+            self.output['raw'] = raw
+
         self.time_overlap = time_overlap
         self.mode = mode
         valid = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
@@ -52,8 +84,10 @@ class anger:
             start_offset, end_offset = self.time_overlap
             event_clips[mode_value]['start_time'] -= start_offset
             event_clips[mode_value]['end_time'] += end_offset
+
+        # Merge FixFun
         if fixfun_ is None:
-            S = FixFun(use_fix=False)(crop_by_clip(raw, event_clips, self.mode))
+            S = FixFun(use_fix=False, auto_level=2)(crop_by_clip(raw, event_clips, self.mode))
         else:
             S = fixfun_(crop_by_clip(raw, event_clips, self.mode))
         self.output['S'] = S
@@ -63,9 +97,11 @@ class anger:
         self.soft = soft
         self.low = low
         self.high = high
+        # Merge S
         S = self.output['S']
 
         AC = PSDS(S).group_freq(self.low, self.high).average_channel()
+        # Merge Low High
         AC.times = AC.times - AC.times[1]
         FC = AC.average_freq(soft=self.soft)
         FC = trans_to_db(FC)
