@@ -1,3 +1,4 @@
+from pathlib import *
 from typing import Union, Tuple, List
 
 import scipy.stats as st
@@ -31,6 +32,11 @@ class anger:
         self.peoplename = ""
         self._a = _a
 
+    def getpeoplelist(self, loaction: str):
+        p = Path(loaction)
+        for i in p.iterdir():
+            if (i.exists('event.txt') and i.exists('data.bdf')) is true:
+               
     def _merge(self, check_list):
         if self._a is None:
             return None
@@ -53,11 +59,14 @@ class anger:
                 return a
         return None
 
-    def loaddata(self, peoplename, time_overlap: Union[int, Tuple[int, int]] = 150, mode='S4', fixfun_=None):
+    def loaddata(self, peoplename, time_overlap: Union[int, Tuple[int, int]] = 150, mode='S4', use_fix=False,
+                 auto_level=2):
         self.peoplename = peoplename
         # Merge Peoplename -> event_clips, raw
-        CL = []
-        CL.append("peoplename")
+        CL = ["peoplename",
+              "mode",
+              "time_overlap"]
+        # CL.append("peoplename")
         D = self._merge(CL)
         if D is not None:
             event_clips = self.output['event_clips'] = D.output["event_clips"]
@@ -86,12 +95,24 @@ class anger:
             event_clips[mode_value]['end_time'] += end_offset
 
         # Merge FixFun
-        if fixfun_ is None:
-            S = FixFun(use_fix=False, auto_level=2)(crop_by_clip(raw, event_clips, self.mode))
+        CL = []
+        CL = [
+            "use_fix",
+            "auto_level"
+        ]
+        D = self._merge(CL)
+        if D is not None:
+            S = self.output.['S'] = D.output.['S']
         else:
-            S = fixfun_(crop_by_clip(raw, event_clips, self.mode))
-        self.output['S'] = S
+            S = FixFun(use_fix=use_fix, auto_level=auto_level)(crop_by_clip(raw, event_clips, self.mode))
+            self.output['S'] = S
         return self
+
+    def get_description(self, peoplename: str, value_list: dict):
+        str1 = str(value_list)  # 那个啥，这个重点在前面
+        str2 = peoplename
+        str = str1 + str2
+        return str
 
     def compute(self, soft=10, low=20, high=30):
         self.soft = soft
