@@ -32,11 +32,15 @@ class anger:
         self.peoplename = ""
         self._a = _a
 
-    def getpeoplelist(self, loaction: str):
-        p = Path(loaction)
+    def getpeoplelist(self, location: str):
+        p = Path(location)
+        peoplelist = []
         for i in p.iterdir():
-            if (i.exists('event.txt') and i.exists('data.bdf')) is true:
-               
+
+            if (i.is_dir() and (i / 'event.txt').exists() and (i / 'data.bdf').exists()) is True:
+                peoplelist.append(str(i.name))
+        return peoplelist
+
     def _merge(self, check_list):
         if self._a is None:
             return None
@@ -65,12 +69,15 @@ class anger:
         # Merge Peoplename -> event_clips, raw
         CL = ["peoplename",
               "mode",
-              "time_overlap"]
+              "time_overlap",
+              "use_fix",
+              "auto_level"]
         # CL.append("peoplename")
         D = self._merge(CL)
         if D is not None:
             event_clips = self.output['event_clips'] = D.output["event_clips"]
             raw = self.output["raw"] = D.output["raw"]
+            S = self.output['S'] = D.output['S']
         else:
             raw = read_BDF_data(peoplename)
             raw = eight_channel_mode(raw)
@@ -93,26 +100,19 @@ class anger:
             start_offset, end_offset = self.time_overlap
             event_clips[mode_value]['start_time'] -= start_offset
             event_clips[mode_value]['end_time'] += end_offset
+        S = FixFun(use_fix=use_fix, auto_level=auto_level)(crop_by_clip(raw, event_clips, self.mode))
+        self.output['S'] = S
 
-        # Merge FixFun
-        CL = []
-        CL = [
-            "use_fix",
-            "auto_level"
-        ]
-        D = self._merge(CL)
-        if D is not None:
-            S = self.output.['S'] = D.output.['S']
-        else:
-            S = FixFun(use_fix=use_fix, auto_level=auto_level)(crop_by_clip(raw, event_clips, self.mode))
-            self.output['S'] = S
         return self
 
     def get_description(self, peoplename: str, value_list: dict):
-        str1 = str(value_list)  # 那个啥，这个重点在前面
-        str2 = peoplename
-        str = str1 + str2
-        return str
+        Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'high', 'low')
+        Value_lite = ('m', 'u', 'a', 't', 's', 'h', 'l')
+        returnstr = peoplename
+        for i in range(7):
+            returnstr = returnstr + Value_lite[i] + str(value_list[Value[i]])
+
+        return returnstr
 
     def compute(self, soft=10, low=20, high=30):
         self.soft = soft
@@ -184,46 +184,20 @@ class anger:
         plt.legend()
 
 
-a = anger()
-people_list = ['01zlh', '02szc', '03zzh', '04zzm']
-data = {}
-for people in people_list:
-    data[people] = anger().loaddata(peoplename=people, time_overlap=(300, 300)).compute()
+def getpeoplelist(location: str):
+    p = Path(location)
+    peoplelist = []
+    for i in p.iterdir():
 
-# Draw StateAnger
-lup = {}
-ldown = {}
-for th in np.linspace(0, 0.1, 500):
-    for k, v in data.items():
-        lup.setdefault(k, [])
-        ldown.setdefault(k, [])
+        if (i.is_dir() and (i / 'event.txt').exists() and (i / 'data.bdf').exists()) is True:
+            peoplelist.append(str(i.name))
+    return peoplelist
 
-        # v.drawstateanger()
-        # v.drawkde()
-        up, down = v.get_truncedExp(th)
-        lup[k] += [up]
-        ldown[k] += [down]
-        up = round(up, 3)
-        down = -round(down, 3)
-        print(k, ":", "UP:", up, 'DOWN:', down)
 
-plt.figure()
-for k, v in lup.items():
-    plt.plot(v, label=k)
-plt.title("UP")
-plt.legend()
-plt.show()
+a = getpeoplelist(r'C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\新建文件夹')
 
-plt.figure()
-for k, v in ldown.items():
-    plt.plot(v, label=k)
-plt.title("DOWN")
-plt.legend()
-plt.show()
-
-plt.plot()
-
-plt.axvline(x=300)
-plt.axvline(x=1632 - 150)
-
-plt.show()
+a = anger().loaddata('02szc').compute()
+_a = [a]
+a1 = anger(_a).loaddata('02szc').compute()
+_a = [a, a1]
+a2 = anger(_a).loaddata('02szc', auto_level=3).compute()
