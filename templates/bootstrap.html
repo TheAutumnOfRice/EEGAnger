@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        .glyphicon{
+            font-size: small!important;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>Title</title>
+	<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+	<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th>param1</th>
+                            <th>param2</th>
+                            <th>param3</th>
+                            <th>
+                                <button class="btn-block" data-toggle="modal" data-target="#add">
+                                    添加
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for items in param %}
+                            {% if param[items]['active'] == 1 %}
+                                <tr class="success tianjia">
+                            {% else %}
+                                <tr class="tianjia">
+                            {% endif %}
+                                <td>{{ items }}</td>
+                                <td>{{ param[items]['param1'] }}</td>
+                                <td>{{ param[items]['param2'] }}</td>
+                                <td>{{ param[items]['param3'] }}</td>
+                                <td>
+                                    <button class="close xiugai">
+                                        <span class="glyphicon glyphicon-pencil"></span>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button type="button" class="close shanchu">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-8">
+                <div id="bar" style="width:500px; height:300px;"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 模态框（Modal） -->
+            <form class="form-horizontal" action="/setMember">
+            <div class="modal fade" id="add" tabindex="-1" role="dialog" aria-labelledby="addLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                &times;
+                            </button>
+                            <h4 class="modal-title" id="addLabel">
+                                添加数据
+                            </h4>
+                        </div>
+                            <div class="modal-body">
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">name</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="name" placeholder="0 ~ 100" type="text">
+                                         </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">param1</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param1" placeholder="0 ~ 100" type="text">
+                                         </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">param2</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param2" placeholder="0 - 20" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" id="param3" class="col-lg-3 control-label">param3</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param3" placeholder="0 - 9" type="text">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">
+                                    关闭
+                                </button>
+                                <button type="submit" class="btn btn-primary" onclick ="showLoading()">
+                                    添加
+                                </button>
+                            </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+            </div>
+            </form>
+
+            <!-- loading -->
+            <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="loadingLabel" data-backdrop='static'>
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="loadingLabel">提示</h4>
+                  </div>
+                  <div class="modal-body">
+                    请稍候。。。<span id="result"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- change -->
+            <form class="form-horizontal" action="/changeMember">
+            <div class="modal fade" id="change" tabindex="-1" role="dialog" aria-labelledby="changeLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                &times;
+                            </button>
+                            <h4 class="modal-title" id="changeLabel">
+                                修改数据
+                            </h4>
+                        </div>
+                            <div class="modal-body">
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">name</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="name" placeholder="0 ~ 100" type="text">
+                                         </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">param1</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param1" placeholder="0 ~ 100" type="text">
+                                         </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" class="col-lg-3 control-label">param2</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param2" placeholder="0 - 20" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputEmail" id="param3" class="col-lg-3 control-label">param3</label>
+                                        <div class="col-lg-9">
+                                            <input class="form-control" name="param3" placeholder="0 - 9" type="text">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">
+                                    关闭
+                                </button>
+                                <button type="submit" class="btn btn-primary" onclick ="showLoading()">
+                                    修改
+                                </button>
+                            </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal -->
+            </div>
+        </form>
+
+        </div>
+
+    </div>
+    <script>
+        function showLoading(){
+            $('#loading').modal('show');
+        }
+
+        $(function () {
+            $(".tianjia").click(function () {
+                $(this).toggleClass("success");
+                $("#bar").parent().html("<div id=\"bar\" style=\"width:500px; height:300px;\"></div>");
+                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
+                $.ajax({
+                    type: "GET",
+                    url: "/changeActive/"+ $(this).find("td").first().text(),
+                    dataType: 'json',
+                    success: function (result) {
+                        chart.setOption(result);
+                    }
+                });
+             });
+
+            $(".shanchu").click(function () {
+                event.stopPropagation();
+                $("#bar").parent().html("<div id=\"bar\" style=\"width:500px; height:300px;\"></div>");
+                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
+                $.ajax({
+                    type: "GET",
+                    url: "/deleteMember/"+ $(this).parent().parent().find("td").first().text(),
+                    dataType: 'json',
+                    success: function (result) {
+                        chart.setOption(result);
+                    }
+                });
+                $(this).parent().parent().remove();
+            });
+
+            $('.xiugai').click(function (event) {
+                event.stopPropagation();
+                $('#change').modal('show');
+                var name = $(this).parent().parent().find("td").first().text();
+                $.ajax({
+                    type: 'GET',
+                    url: "/searchMember/"+ name,
+                    dataType: 'json',
+                    success: function (result) {
+                        $("#change input[name='name']").val(name);
+                        $("#change input[name='param1']").val(result['param1']);
+                        $("#change input[name='param2']").val(result['param2']);
+                        $("#change input[name='param3']").val(result['param3']);
+                    }
+                })
+            });
+        })
+    </script>
+    <script>
+        $(
+            function () {
+                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
+                $.ajax({
+                    type: "GET",
+                    url: "http://127.0.0.1:5000/barChart",
+                    dataType: 'json',
+                    success: function (result) {
+                        chart.setOption(result);
+                    }
+                });
+            }
+        )
+    </script>
+</body>
+</html>
