@@ -66,53 +66,65 @@ class anger:
     def loaddata(self, peoplename, time_overlap: Union[int, Tuple[int, int]] = 150, mode='S4', use_fix=False,
                  auto_level=2):
         self.peoplename = peoplename
+        self.use_fix = use_fix
+        self.auto_level = auto_level
         # Merge Peoplename -> event_clips, raw
-        CL = ["peoplename",
-              "mode",
-              "time_overlap",
-              "use_fix",
-              "auto_level"]
+        CL = ["peoplename"]
         # CL.append("peoplename")
         D = self._merge(CL)
         if D is not None:
-            event_clips = self.output['event_clips'] = D.output["event_clips"]
+            event_clips = D.output["event_clips"]
             raw = self.output["raw"] = D.output["raw"]
-            S = self.output['S'] = D.output['S']
+            # S = self.output['S'] = D.output['S']
         else:
             raw = read_BDF_data(peoplename)
             raw = eight_channel_mode(raw)
+            self.output['raw'] = raw
             events_timepoint, events_id = read_event_data(peoplename, raw.info)
             event_clips = preprocess_events(events_timepoint, events_id)
             self.output['event_clips'] = event_clips
-            self.output['raw'] = raw
-
         self.time_overlap = time_overlap
         self.mode = mode
-        valid = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
-        assert mode in valid, "Mode只能为" + ",".join(valid) + "中的一个！"
-        mode_value = int(mode[1]) - 1
-        if isinstance(time_overlap, int):
-            if mode_value <= 4:
-                event_clips[mode_value]['end_time'] += self.time_overlap
-            if mode_value >= 1:
-                event_clips[mode_value]['start_time'] -= self.time_overlap
+        D = self._merge(CL)
+        if D is not None:
+            event_clips = self.output['event_clips'] = D.output["event_clips"]
         else:
-            start_offset, end_offset = self.time_overlap
-            event_clips[mode_value]['start_time'] -= start_offset
-            event_clips[mode_value]['end_time'] += end_offset
-        S = FixFun(use_fix=use_fix, auto_level=auto_level)(crop_by_clip(raw, event_clips, self.mode))
+
+            valid = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']
+            assert mode in valid, "Mode只能为" + ",".join(valid) + "中的一个！"
+            mode_value = int(mode[1]) - 1
+            if isinstance(time_overlap, int):
+                if mode_value <= 4:
+                    event_clips[mode_value]['end_time'] += self.time_overlap
+                if mode_value >= 1:
+                    event_clips[mode_value]['start_time'] -= self.time_overlap
+            else:
+                start_offset, end_offset = self.time_overlap
+                event_clips[mode_value]['start_time'] -= start_offset
+                event_clips[mode_value]['end_time'] += end_offset
+        CL = ['use_fix', 'auto_level']
+        D = self._merge(CL)
+        if D is not None:
+            S = D.output['S']
+        else:
+            S = FixFun(use_fix=use_fix, auto_level=auto_level)(crop_by_clip(raw, event_clips, self.mode))
         self.output['S'] = S
 
         return self
 
-    def get_description(self, peoplename: str, value_list: dict):
-        Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'high', 'low')
-        Value_lite = ('m', 'u', 'a', 't', 's', 'h', 'l')
-        returnstr = peoplename
-        for i in range(7):
-            returnstr = returnstr + Value_lite[i] + str(value_list[Value[i]])
+    def get_description(self, peoplename: str, value_dict: dict):
+        Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'low', 'high')
 
-        return returnstr
+        if value_dict[Value[1]] == True:
+            returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(l=' + str(
+                value_dict[Value[2]]) + ',T=' + str(value_dict[Value[3]]) + ',s=' + str(
+                value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
+            return returnstr
+        else:
+            returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(T=' + str(
+                value_dict[Value[3]]) + ',s=' + str(
+                value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
+            return returnstr
 
     def compute(self, soft=10, low=20, high=30):
         self.soft = soft
@@ -194,6 +206,39 @@ def getpeoplelist(location: str):
     return peoplelist
 
 
+def get_description(peoplename: str, value_dict: dict):
+    value_dict.setdefault('mode', 'S1')
+    value_dict.setdefault('use_fix', True)
+    value_dict.setdefault('auto_level', 2)
+    value_dict.setdefault('time_overlap', 150)
+    value_dict.setdefault('soft', 10)
+    value_dict.setdefault('low', 20)
+    value_dict.setdefault('high', 30)
+
+    Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'low', 'high')
+
+    if value_dict[Value[1]] == True:
+        returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(l=' + str(
+            value_dict[Value[2]]) + ',T=' + str(value_dict[Value[3]]) + ',s=' + str(
+            value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
+        return returnstr
+    else:
+        returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(T=' + str(
+            value_dict[Value[3]]) + ',s=' + str(
+            value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
+        return returnstr
+
+
+va = {}
+peoplename = 'sacassdv'
+va['mode'] = 'ds'
+va['use_fix'] = True
+va['auto_level'] = 2
+va['time_overlap'] = 52525
+va['soft'] = 10
+va['low'] = 20
+va['high'] = 30
+a = get_description(peoplename, va)
 a = getpeoplelist(r'C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\新建文件夹')
 
 a = anger().loaddata('02szc').compute()
