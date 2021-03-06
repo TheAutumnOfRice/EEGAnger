@@ -207,7 +207,7 @@ def getpeoplelist(location: str):
 
 
 def get_description(peoplename: str, value_dict: dict):
-    value_dict.setdefault('mode', 'S1')
+    value_dict.setdefault('mode', 'S1');
     value_dict.setdefault('use_fix', True)
     value_dict.setdefault('auto_level', 2)
     value_dict.setdefault('time_overlap', 150)
