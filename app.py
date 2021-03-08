@@ -1,86 +1,114 @@
 import json
 
-from flask import Flask, render_template,request
+from flask import Flask, render_template, request
 
-from pyecharts import options as opts
-from pyecharts.charts import Bar
 
+from anger import Anger
+from getcharts import *
+from config import data_dir
 
 app = Flask(__name__, static_folder="templates")
 
-#name 下面加入description 不写入就默认 写入就修改
+# name 下面加入description 不写入就默认 写入就修改
 
-Param = {}
-#user(zy) ->{
+allPeopleList = {}
+
+
+# user(zy) ->{
 #   description(“zy soft:10 low:......”) -> {
-#
+#        'data': Anger Object
+#        'active': 0 or 1
 #   },
 # }
 
-def bar_base() -> Bar:
-    c = (
-        Bar()
-        .add_xaxis(["param1", "param2", "param3"])
-        .set_global_opts(title_opts=opts.TitleOpts(title="Bar-基本示例", subtitle="我是副标题"))
-    )
-    for i in Param:
-        if Param[i]["active"] == 1 :
-            c.add_yaxis(i, [ Param[i]["param1"],Param[i]["param2"],Param[i]["param3"] ] )
-    return c
-
-
 @app.route("/")
-def index():
-    return render_template("index.html")
-
-@app.route("/bootstrap")
 def bootstrap():
-    return render_template("bootstrap.html", param = Param)
+    return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
 
-@app.route("/barChart")
-def get_bar_chart():
-    c = bar_base()
-    return c.dump_options_with_quotes()
 
-@app.route("/changeActive/<name>")
-def change_active(name):
-    if(Param[name]['active'] == 0):
-        Param[name]['active'] = 1
-    else:
-        Param[name]['active'] = 0
-    c = bar_base()
-    return c.dump_options_with_quotes()
+@app.route("/getChart")
+def get_chart():
+    Grad_l = GetGrad(allPeopleList)
+    kde_l = GetKde(allPeopleList)
+    stateanger_l = GetStateAnger(allPeopleList)
 
-@app.route("/deleteMember/<name>")
-def delete_member(name):
-    del Param[name]
-    c = bar_base()
-    return c.dump_options_with_quotes()
+    list = json.dumps([Grad_l, kde_l, stateanger_l])
+    return list
 
-@app.route("/searchMember/<name>")
-def search_member(name):
-    c = json.dumps(Param[name])
-    return c
 
-@app.route("/setMember",methods=['POST', 'GET'])
+@app.route("/changeActive", methods=['POST'])
+def change_active():
+    data = request.get_data(as_text=True)
+    data = json.loads(data)
+    allPeopleList[data['peoplename']][data['description']]['active'] = not \
+        allPeopleList[data['peoplename']][data['description']]['active']
+    return get_chart()
+
+
+@app.route("/deleteMember", methods=['POST'])
+def delete_member():
+    data = request.get_data(as_text=True)
+    data = json.loads(data)
+    del allPeopleList[data['peoplename']][data['description']]
+    return get_chart()
+
+
+@app.route("/searchMember",methods=['POST'])
+def search_member():
+    data = request.get_data(as_text=True)
+    data = json.loads(data)
+    paramList = allPeopleList[data['peoplename']][data['description']]['data'].get_param()
+    return json.dumps(paramList)
+
+
+@app.route("/setMember", methods=['POST'])
 def set_member():
-    Param[request.args['name']] = {
-        'param1': request.args['param1'],
-        'param2': request.args['param2'],
-        'param3': request.args['param3'],
-        'active': 1
-    }
-    return render_template("bootstrap.html", param = Param)
+    peoplename = request.form['peoplename']
+    soft = int(request.form['soft'])
+    low = int(request.form['low'])
+    high = int(request.form['high'])
+    time_overlap1 = int(request.form['time_overlap1'])
+    mode = request.form['mode']
+    auto_level = int(request.form['auto_level'])
+    if 'use_fix' in request.form:
+        use_fix = True
+    else:
+        use_fix = False
 
-@app.route("/changeMember",methods=['POST','GET'])
-def change_member():
-    Param[request.args['name']] = {
-        'param1': request.args['param1'],
-        'param2': request.args['param2'],
-        'param3': request.args['param3'],
-        'active': 1
-    }
-    return render_template("bootstrap.html", param=Param)
+    if 'time_overlap2' in request.form:
+        a = Anger().loaddata(peoplename=peoplename,
+                             time_overlap=(time_overlap1, int(request.form['time_overlap2'])),
+                             mode=mode,
+                             use_fix=use_fix,
+                             auto_level=auto_level
+                             ).compute(soft=soft, low=low, high=high)
+        description = a.get_description()
+    else:
+        a = Anger().loaddata(peoplename=peoplename,
+                             time_overlap=time_overlap1,
+                             mode=mode,
+                             use_fix=use_fix,
+                             auto_level=auto_level
+                             ).compute(soft=soft, low=low, high=high)
+        description = a.get_description()
+
+        if peoplename not in allPeopleList:
+            allPeopleList[peoplename] = {}
+        allPeopleList[peoplename][description] = {'data': a, 'active': True}
+        return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
+
+
+@app.route("/editMember", methods=['POST'])
+def edit_member():
+    return "1"
+    # Param[request.args['name']] = {
+    #     'param1': request.args['param1'],
+    #     'param2': request.args['param2'],
+    #     'param3': request.args['param3'],
+    #     'active': 1
+    # }
+    # return render_template("bootstrap.html", param=Param)
+
 
 if __name__ == "__main__":
     app.run()

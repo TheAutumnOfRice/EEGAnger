@@ -2,259 +2,398 @@
 <html lang="en">
 <head>
     <style>
-        .glyphicon{
-            font-size: small!important;
-        }
+
     </style>
     <meta charset="UTF-8">
     <title>Title</title>
-	<link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-	<script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
-	<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
+    <script src="https://cdn.bootcss.com/jquery/3.0.0/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/popper.js/1.15.0/umd/popper.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>name</th>
-                            <th>param1</th>
-                            <th>param2</th>
-                            <th>param3</th>
-                            <th>
-                                <button class="btn-block" data-toggle="modal" data-target="#add">
-                                    添加
-                                </button>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for items in param %}
-                            {% if param[items]['active'] == 1 %}
-                                <tr class="success tianjia">
-                            {% else %}
-                                <tr class="tianjia">
-                            {% endif %}
-                                <td>{{ items }}</td>
-                                <td>{{ param[items]['param1'] }}</td>
-                                <td>{{ param[items]['param2'] }}</td>
-                                <td>{{ param[items]['param3'] }}</td>
-                                <td>
-                                    <button class="close xiugai">
-                                        <span class="glyphicon glyphicon-pencil"></span>
-                                    </button>
-                                </td>
-                                <td>
-                                    <button type="button" class="close shanchu">
-                                        <span class="glyphicon glyphicon-remove"></span>
-                                    </button>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="container">
+
+    <div class="row">
+        <div class="col-6">
+            <div class="col-auto">
+                <h5>Anger</h5>
+                <button class="btn" style="border-radius: 50%;display: flex;background: #dee2e6" data-toggle="modal"
+                        data-target="#addModal">
+                    <i class="bi-plus"></i>
+                </button>
             </div>
-            <div class="col-md-8">
-                <div id="bar" style="width:500px; height:300px;"></div>
-            </div>
+            <table class=" table table-hover">
+                <thead>
+                <tr>
+                    <th style="width: 20%">name</th>
+                    <th style="width: 70%">description</th>
+                    <th class="actions" style="width: 5%"></th>
+                    <th class="actions" style="width: 5%"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user in allPeopleList %}
+                    {% for description in allPeopleList[user] %}
+                        {% if allPeopleList[user][description]['active'] == true %}
+                            <tr class="table-active add-to-charts">
+                                {% else %}
+                            <tr class="add-to-charts">
+                        {% endif %}
+                    <td>{{ user }}</td>
+                    <td>{{ description }}</td>
+                    <td class="actions edit-anger">
+                        <a class="icon" href="#">
+                            <i class="bi-pencil-fill"></i>
+                        </a>
+                    </td>
+                    <td class="actions delete-anger">
+                        <a class="icon" href="#">
+                            <i class="bi-x-circle"></i>
+                        </a>
+                    </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <div class="row">
-            <!-- 模态框（Modal） -->
-            <form class="form-horizontal" action="/setMember">
-            <div class="modal fade" id="add" tabindex="-1" role="dialog" aria-labelledby="addLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                                &times;
-                            </button>
-                            <h4 class="modal-title" id="addLabel">
-                                添加数据
-                            </h4>
-                        </div>
-                            <div class="modal-body">
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">name</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="name" placeholder="0 ~ 100" type="text">
-                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">param1</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param1" placeholder="0 ~ 100" type="text">
-                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">param2</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param2" placeholder="0 - 20" type="text">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" id="param3" class="col-lg-3 control-label">param3</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param3" placeholder="0 - 9" type="text">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">
-                                    关闭
-                                </button>
-                                <button type="submit" class="btn btn-primary" onclick ="showLoading()">
-                                    添加
-                                </button>
-                            </div>
-                    </div><!-- /.modal-content -->
-                </div><!-- /.modal -->
-            </div>
-            </form>
-
-            <!-- loading -->
-            <div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="loadingLabel" data-backdrop='static'>
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h4 class="modal-title" id="loadingLabel">提示</h4>
-                  </div>
-                  <div class="modal-body">
-                    请稍候。。。<span id="result"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- change -->
-            <form class="form-horizontal" action="/changeMember">
-            <div class="modal fade" id="change" tabindex="-1" role="dialog" aria-labelledby="changeLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-                                &times;
-                            </button>
-                            <h4 class="modal-title" id="changeLabel">
-                                修改数据
-                            </h4>
-                        </div>
-                            <div class="modal-body">
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">name</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="name" placeholder="0 ~ 100" type="text">
-                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">param1</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param1" placeholder="0 ~ 100" type="text">
-                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" class="col-lg-3 control-label">param2</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param2" placeholder="0 - 20" type="text">
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputEmail" id="param3" class="col-lg-3 control-label">param3</label>
-                                        <div class="col-lg-9">
-                                            <input class="form-control" name="param3" placeholder="0 - 9" type="text">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">
-                                    关闭
-                                </button>
-                                <button type="submit" class="btn btn-primary" onclick ="showLoading()">
-                                    修改
-                                </button>
-                            </div>
-                    </div><!-- /.modal-content -->
-                </div><!-- /.modal -->
-            </div>
-        </form>
-
+        <div class="col-6">
+            <div id="gradChart" style="width:500px; height:300px;"></div>
+            <div id="kdeChart" style="width:500px; height:300px;"></div>
+            <div id="stateAngerChart" style="width:500px; height:300px;"></div>
         </div>
-
     </div>
-    <script>
-        function showLoading(){
-            $('#loading').modal('show');
-        }
 
-        $(function () {
-            $(".tianjia").click(function () {
-                $(this).toggleClass("success");
-                $("#bar").parent().html("<div id=\"bar\" style=\"width:500px; height:300px;\"></div>");
-                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                $.ajax({
-                    type: "GET",
-                    url: "/changeActive/"+ $(this).find("td").first().text(),
-                    dataType: 'json',
-                    success: function (result) {
-                        chart.setOption(result);
-                    }
-                });
-             });
+</div>
 
-            $(".shanchu").click(function () {
-                event.stopPropagation();
-                $("#bar").parent().html("<div id=\"bar\" style=\"width:500px; height:300px;\"></div>");
-                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                $.ajax({
-                    type: "GET",
-                    url: "/deleteMember/"+ $(this).parent().parent().find("td").first().text(),
-                    dataType: 'json',
-                    success: function (result) {
-                        chart.setOption(result);
-                    }
-                });
-                $(this).parent().parent().remove();
-            });
+<!-- 添加 -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addLabel">添加数据</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="/setMember" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <h5>name</h5>
+                        <select name="peoplename" class="form-control">
+                            {% for items in peopleList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-            $('.xiugai').click(function (event) {
-                event.stopPropagation();
-                $('#change').modal('show');
-                var name = $(this).parent().parent().find("td").first().text();
-                $.ajax({
-                    type: 'GET',
-                    url: "/searchMember/"+ name,
-                    dataType: 'json',
-                    success: function (result) {
-                        $("#change input[name='name']").val(name);
-                        $("#change input[name='param1']").val(result['param1']);
-                        $("#change input[name='param2']").val(result['param2']);
-                        $("#change input[name='param3']").val(result['param3']);
-                    }
-                })
-            });
-        })
-    </script>
-    <script>
-        $(
-            function () {
-                var chart = echarts.init(document.getElementById('bar'), 'white', {renderer: 'canvas'});
-                $.ajax({
-                    type: "GET",
-                    url: "http://127.0.0.1:5000/barChart",
-                    dataType: 'json',
-                    success: function (result) {
-                        chart.setOption(result);
-                    }
-                });
+                    <div class="form-group">
+                        <h5>soft</h5>
+                        <input class="form-control" name="soft" value="10" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>low</h5>
+                        <input class="form-control" name="low" value="20" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>high</h5>
+                        <input class="form-control" name="high" value="30" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>time-overlap</h5>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Middle
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="add-middle dropdown-item">Middle</a>
+                                    <a class="add-range dropdown-item">Range</a>
+                                </div>
+                            </div><!-- /btn-group -->
+
+                            <input type="text" class="form-control" name="time_overlap1">
+                        </div><!-- /input-group -->
+                    </div>
+
+                    <div class="form-group">
+                        <h5>auto_level</h5>
+                        <input class="form-control" name="auto_level" value="2" type="text">
+                    </div>
+
+                    <hr/>
+                    <h5>model</h5>
+                    <div class="form-group">
+                        <label class="radio-inline">
+                            <input type="radio" value="S1" name="mode"> S1
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S2" name="mode"> S2
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S3" name="mode"> S3
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S4" name="mode"> S4
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S5" name="mode"> S5
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S6" name="mode"> S6
+                        </label>
+                    </div>
+
+                    <hr/>
+                    <div class="form-group">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" value="1" name="use_fix"> use fix
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading()">添加</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<!-- loading -->
+<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="loadingLabel" data-backdrop='static'>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="loadingLabel">提示</h4>
+            </div>
+            <div class="modal-body">
+                请稍候。。。<span id="result"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- change -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editLabel">添加数据</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="/editMember" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <h5>name</h5>
+                        <select name="peoplename" class="form-control">
+                            {% for items in peopleList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <h5>soft</h5>
+                        <input class="form-control" name="soft" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>low</h5>
+                        <input class="form-control" name="low" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>high</h5>
+                        <input class="form-control" name="high" type="text">
+                    </div>
+
+                    <div class="form-group">
+                        <h5>time-overlap</h5>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Middle
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="add-middle dropdown-item">Middle</a>
+                                    <a class="add-range dropdown-item">Range</a>
+                                </div>
+                            </div><!-- /btn-group -->
+
+                            <input type="text" class="form-control" name="time_overlap1">
+                        </div><!-- /input-group -->
+                    </div>
+
+                    <div class="form-group">
+                        <h5>auto_level</h5>
+                        <input class="form-control" name="auto_level" type="text">
+                    </div>
+
+                    <hr/>
+                    <h5>model</h5>
+                    <div class="form-group">
+                        <label class="radio-inline">
+                            <input type="radio" value="S1" name="mode"> S1
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S2" name="mode"> S2
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S3" name="mode"> S3
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S4" name="mode"> S4
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S5" name="mode"> S5
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" value="S6" name="mode"> S6
+                        </label>
+                    </div>
+
+                    <hr/>
+                    <div class="form-group">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" value="1" name="use_fix"> use fix
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading()">添加</button>
+                </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+<script>
+    function showLoading() {
+        $('#loading').modal('show');
+    }
+
+    $(function () {
+        $(".add-iddle").click(function () {
+            $(this).parent().parent().find("button").first().text("Middle");
+            $(this).parent().parent().parent().find("input").first().next().remove();
+        });
+
+        $(".add-range").click(function () {
+            if ($(this).parent().parent().find("button").first().text() !== "Range") {
+                $(this).parent().parent().find("button").first().text("Range");
+                $(this).parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">")
             }
-        )
-    </script>
+        });
+
+        $(".add-to-charts").click(function () {
+            $(this).toggleClass("table-active");
+            $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
+                "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
+                "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
+            var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
+            var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
+            var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
+            $.ajax({
+                type: "POST",
+                url: "/changeActive",
+                dataType: 'json',
+                contentType: 'application/json;charset = utf-8',
+                data: JSON.stringify({
+                    peoplename: $(this).find("td").first().text(),
+                    description: $(this).find("td").first().next().text()
+                }),
+                success: function (result) {
+                    grad.setOption(JSON.parse(result[0]));
+                    kde.setOption(JSON.parse(result[1]));
+                    stateAnger.setOption(JSON.parse(result[2]));
+                }
+            });
+        });
+
+        $(".delete-anger").click(function (event) {
+            event.stopPropagation();
+            $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
+                "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
+                "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
+            var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
+            var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
+            var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
+
+            var name = $(this).parent().find("td").first().text();
+            var description = $(this).parent().find("td").first().next().text()
+            $.ajax({
+                type: "POST",
+                url: "/deleteMember",
+                dataType: 'json',
+                contentType: 'application/json;charset = utf-8',
+                data: JSON.stringify({
+                    peoplename: name,
+                    description: description
+                }),
+                success: function (result) {
+                    grad.setOption(JSON.parse(result[0]));
+                    kde.setOption(JSON.parse(result[1]));
+                    stateAnger.setOption(JSON.parse(result[2]));
+                }
+            });
+            $(this).parent().remove();
+        });
+
+        $('.edit-anger').click(function (event) {
+            event.stopPropagation();
+            $('#editModal').modal('show');
+            var name = $(this).parent().find("td").first().text();
+            var description = $(this).parent().find("td").first().next().text()
+            $.ajax({
+                type: "POST",
+                url: "/searchMember",
+                dataType: 'json',
+                contentType: 'application/json;charset = utf-8',
+                data: JSON.stringify({
+                    peoplename: name,
+                    description: description
+                }),
+                success: function (result) {
+                    $("#changeModal input[name='name']").val(name);
+                    $("#changeModal input[name='param1']").val(result['param1']);
+                    $("#changeModal input[name='param2']").val(result['param2']);
+                    $("#changeModal input[name='param3']").val(result['param3']);
+                }
+            })
+        });
+    })
+</script>
+<script>
+    $(
+        function () {
+            {#load charts#}
+            var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
+            var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
+            var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:5000/getChart",
+                dataType: 'json',
+                success: function (result) {
+                    grad.setOption(JSON.parse(result[0]));
+                    kde.setOption(JSON.parse(result[1]));
+                    stateAnger.setOption(JSON.parse(result[2]));
+                }
+            });
+        }
+    )
+</script>
 </body>
 </html>

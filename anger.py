@@ -7,6 +7,9 @@ from getdata import *
 from preprocess import *
 from psdprocess import *
 
+from pyecharts import options as opts
+from pyecharts.charts import Line
+
 
 class FixFun:
     def __init__(self, use_fix=True, auto_level=2):
@@ -21,8 +24,8 @@ class FixFun:
 
 
 ###dfs
-class anger:
-    def __init__(self, _a: List["anger"] = None):
+class Anger:
+    def __init__(self, _a: List["Anger"] = None):
         self.soft = -1
         self.low = -1
         self.high = -1
@@ -30,9 +33,11 @@ class anger:
         self.mode = ""
         self.output = {}
         self.peoplename = ""
+        self.param={}
         self._a = _a
 
-    def getpeoplelist(self, location: str):
+    @staticmethod
+    def getpeoplelist(location: str):
         p = Path(location)
         peoplelist = []
         for i in p.iterdir():
@@ -112,19 +117,32 @@ class anger:
 
         return self
 
-    def get_description(self, peoplename: str, value_dict: dict):
+    def get_description(self, value_dict: Optional[dict]):
+        if value_dict is None:
+            assert len(self.param)>0
+            value_dict = self.param
         Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'low', 'high')
 
         if value_dict[Value[1]] == True:
-            returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(l=' + str(
+            returnstr = self.peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(l=' + str(
                 value_dict[Value[2]]) + ',T=' + str(value_dict[Value[3]]) + ',s=' + str(
                 value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
             return returnstr
         else:
-            returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(T=' + str(
+            returnstr = self.peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(T=' + str(
                 value_dict[Value[3]]) + ',s=' + str(
                 value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
             return returnstr
+
+    def get_param(self, vd: dict):
+        p1_list = ["peoplename", "time_overlap", "mode", "use_fix", "auto_level"]
+        p2_list = ["soft","low","high"]
+        p1_dict = {k:vd[k] for k in p1_list}
+        p2_dict = {k:vd[k] for k in p2_list}
+        self.param = vd
+        self.loaddata(**p1_dict)
+        self.compute(**p2_dict)
+        return self
 
     def compute(self, soft=10, low=20, high=30):
         self.soft = soft
@@ -207,7 +225,7 @@ def getpeoplelist(location: str):
 
 
 def get_description(peoplename: str, value_dict: dict):
-    value_dict.setdefault('mode', 'S1');
+    value_dict.setdefault('mode', 'S1')
     value_dict.setdefault('use_fix', True)
     value_dict.setdefault('auto_level', 2)
     value_dict.setdefault('time_overlap', 150)
@@ -228,21 +246,112 @@ def get_description(peoplename: str, value_dict: dict):
             value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
         return returnstr
 
+# va = {}
+# peoplename = 'sacassdv'
+# va['mode'] = 'ds'
+# va['use_fix'] = True
+# va['auto_level'] = 2
+# va['time_overlap'] = 52525
+# va['soft'] = 10
+# va['low'] = 20
+# va['high'] = 30
+# a = get_description(peoplename, va)
+# a = getpeoplelist(r'C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\新建文件夹')
+#
+# a = Anger().loaddata('02szc').compute()
+# _a = [a]
+# a1 = Anger(_a).loaddata('02szc').compute()
+# _a = [a, a1]
+# a2 = Anger(_a).loaddata('02szc', auto_level=3).compute()
 
-va = {}
-peoplename = 'sacassdv'
-va['mode'] = 'ds'
-va['use_fix'] = True
-va['auto_level'] = 2
-va['time_overlap'] = 52525
-va['soft'] = 10
-va['low'] = 20
-va['high'] = 30
-a = get_description(peoplename, va)
-a = getpeoplelist(r'C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\新建文件夹')
-
-a = anger().loaddata('02szc').compute()
-_a = [a]
-a1 = anger(_a).loaddata('02szc').compute()
-_a = [a, a1]
-a2 = anger(_a).loaddata('02szc', auto_level=3).compute()
+# a  = Anger().loaddata(peoplename='01zlh', time_overlap=(300, 300)).compute()
+# b  = Anger().loaddata(peoplename='02szc', time_overlap=(300, 300)).compute()
+#
+# plt.rcParams['font.sans-serif'] = ['SimHei']
+# plt.rcParams['axes.unicode_minus'] = False
+# plt.plot(a.output['AC'].times[1:a.output['FC'].size], a.output['Grad_FC'], label=a.peoplename)
+# plt.legend()
+# plt.show()
+# Grad_l = (
+#     Line()
+#     .add_xaxis(xaxis_data=a.output['AC'].times[1:a.output['FC'].size])
+#     .add_yaxis(
+#         y_axis=a.output['Grad_FC'],
+#         series_name=a.peoplename,
+#         is_symbol_show=False
+#     )
+#     .add_yaxis(
+#         y_axis=b.output['Grad_FC'],
+#         series_name=b.peoplename,
+#         is_symbol_show=False
+#     )
+#     .set_series_opts(
+#         label_opts=opts.LabelOpts(is_show=False)
+#     )
+#     .set_global_opts(
+#         title_opts=opts.TitleOpts(title="Grad"),
+#         axispointer_opts=opts.AxisPointerOpts(
+#             is_show=True, link=[{"xAxisIndex": "all"}]
+#         ),
+#         xaxis_opts=opts.AxisOpts(
+#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True),
+#             is_scale=False
+#         ),
+#     )
+#     .render("test.html")
+# )
+#
+# plt.rcParams['font.sans-serif'] = ['SimHei']
+# plt.rcParams['axes.unicode_minus'] = False
+# plt.plot(a.output['X'], a.output['dens'], label=a.peoplename)
+# plt.tick_params(labelsize=20)
+# font = {'size': 20}
+# plt.xlabel('变量', font)
+# plt.ylabel('概率密度函数', font)
+# plt.legend(fontsize=15)
+# kde_l = (
+#     Line()
+#     .add_xaxis(xaxis_data=a.output['X'])
+#     .add_yaxis(
+#         y_axis=a.output['dens'],
+#         series_name=a.peoplename,
+#         is_symbol_show=False
+#     )
+#     .set_series_opts(
+#         label_opts=opts.LabelOpts(is_show=False)
+#     )
+#     .set_global_opts(
+#         title_opts=opts.TitleOpts(title="概率密度函数"),
+#         axispointer_opts=opts.AxisPointerOpts(
+#             is_show=True, link=[{"xAxisIndex": "all"}]
+#         ),
+#         xaxis_opts=opts.AxisOpts(
+#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True),
+#             is_scale=False
+#         ),
+#     )
+#     .render("test.html")
+# )
+#
+# stateanger_l = (
+#     Line()
+#     .add_xaxis(xaxis_data=a.output['AC'].times)
+#     .add_yaxis(
+#         y_axis=a.output['FC'],
+#         series_name=a.peoplename,
+#         is_symbol_show=False
+#     )
+#     .set_series_opts(
+#         label_opts=opts.LabelOpts(is_show=False)
+#     )
+#     .set_global_opts(
+#         title_opts=opts.TitleOpts(title="??"),
+#         axispointer_opts=opts.AxisPointerOpts(
+#             is_show=True, link=[{"xAxisIndex": "all"}]
+#         ),
+#         xaxis_opts=opts.AxisOpts(
+#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True)
+#         ),
+#     )
+#     .render("test.html")
+# )
