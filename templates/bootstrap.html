@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <style>
-
+        .modal{overflow:auto!important;}
     </style>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -79,7 +79,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form action="/setMember" method="post">
+            <form id="addForm">
                 <div class="modal-body">
                     <div class="form-group">
                         <h5>name</h5>
@@ -157,31 +157,17 @@
                         </label>
                     </div>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                    <button type="submit" class="btn btn-primary" onclick="showLoading()">添加</button>
-                </div>
             </form>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="submit" class="btn btn-primary" onclick="addMember()">添加</button>
+            </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
 </div>
 
-<!-- loading -->
-<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="loadingLabel" data-backdrop='static'>
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="loadingLabel">提示</h4>
-            </div>
-            <div class="modal-body">
-                请稍候。。。<span id="result"></span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- change -->
+<!-- edit -->
 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -191,7 +177,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="editForm" action="/editMember" method="post">
+            <form id="editForm">
                 <div class="modal-body">
                     <div class="form-group">
                         <h5>name</h5>
@@ -279,136 +265,191 @@
     </div><!-- /.modal -->
 </div>
 
+<!-- loading -->
+<div class="modal fade" id="loading" tabindex="-1" role="dialog" aria-labelledby="loadingLabel" data-backdrop='static'>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="loadingLabel">提示</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                请稍候。。。<span id="result"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     var curname//用于修改表单提交时allPeopleList里的键
     var curdescription
 
-    function showLoading() {
+    function addMember() {
+        $('#loading div.modal-body').text("请稍后。。。。。。");
         $('#loading').modal('show');
+        var form = $('#addForm');
+        $.ajax({
+            type: "POST",
+            url: "/setMember",
+            data: form.serialize(),
+            dataType: "json",
+            success: function (data) {
+                if (data === "SUCCESS") {
+                    $(location).prop('href', '/');
+                } else {
+                    $('#loading div.modal-body').text("ERROR: " + data);
+                }
+            }
+        })
     }
 
     function submitEdit() {
-        $('#editModal').modal('hide');
-        showLoading();
+        $('#loading div.modal-body').text("请稍后。。。。。。");
+        $('#loading').modal('show');
         var form = $('#editForm');
         var prename = $("<input type='text' name='prepeoplename' hidden/>");
         var description = $("<input type='text' name='description' hidden/>");
-        prename.attr('value', curname);
-        description.attr('value', curdescription);
+        prename.prop('value', curname);
+        description.prop('value', curdescription);
         form.append(prename);
         form.append(description);
-        form.submit();
+        $.ajax({
+            type: "POST",
+            url: "/editMember",
+            data: form.serialize(),
+            dataType: "json",
+            success: function (data) {
+                if (data === "SUCCESS") {
+                    $(location).prop('href', '/');
+                } else {
+                    $('#loading div.modal-body').text("ERROR: " + data);
+                }
+            }
+        })
     }
 
-    $(function () {
-        $(".add-middle").click(function () {
-            console.log("click");
-            $(this).parent().parent().find("button").first().text("Middle");
-            $(this).parent().parent().parent().find("input").first().next().remove();
-        });
+    $(".add-middle").click(function () {
+        $(this).parent().parent().find("button").first().text("Middle");
+        $(this).parent().parent().parent().find("input").first().next().remove();
+    });
 
-        $(".add-range").click(function () {
-            console.log("click");
-            if ($(this).parent().parent().find("button").first().text() !== "Range") {
-                $(this).parent().parent().find("button").first().text("Range");
-                $(this).parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">")
+    $(".add-range").click(function () {
+        if ($(this).parent().parent().find("button").first().text() !== "Range") {
+            $(this).parent().parent().find("button").first().text("Range");
+            $(this).parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">")
+        }
+    });
+
+    $(".add-to-charts").click(function () {
+        $(this).toggleClass("table-active");
+        $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
+            "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
+            "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
+        var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
+        var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
+        var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
+        $.ajax({
+            type: "POST",
+            url: "/changeActive",
+            dataType: 'json',
+            contentType: 'application/json;charset = utf-8',
+            data: JSON.stringify({
+                peoplename: $(this).find("td").first().text(),
+                description: $(this).find("td").first().next().text()
+            }),
+            success: function (result) {
+                grad.setOption(JSON.parse(result[0]));
+                kde.setOption(JSON.parse(result[1]));
+                stateAnger.setOption(JSON.parse(result[2]));
             }
         });
+    });
 
-        $(".add-to-charts").click(function () {
-            $(this).toggleClass("table-active");
-            $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
-                "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
-                "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
-            var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
-            var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
-            var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
-            $.ajax({
-                type: "POST",
-                url: "/changeActive",
-                dataType: 'json',
-                contentType: 'application/json;charset = utf-8',
-                data: JSON.stringify({
-                    peoplename: $(this).find("td").first().text(),
-                    description: $(this).find("td").first().next().text()
-                }),
-                success: function (result) {
-                    grad.setOption(JSON.parse(result[0]));
-                    kde.setOption(JSON.parse(result[1]));
-                    stateAnger.setOption(JSON.parse(result[2]));
-                }
-            });
+    $(".delete-anger").click(function (event) {
+        event.stopPropagation();
+        $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
+            "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
+            "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
+        var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
+        var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
+        var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
+
+        var name = $(this).parent().parent().parent().find("td").first().text();
+        var description = $(this).parent().parent().parent().find("td").first().next().text();
+        $.ajax({
+            type: "POST",
+            url: "/deleteMember",
+            dataType: 'json',
+            contentType: 'application/json;charset = utf-8',
+            data: JSON.stringify({
+                peoplename: name,
+                description: description
+            }),
+            success: function (result) {
+                grad.setOption(JSON.parse(result[0]));
+                kde.setOption(JSON.parse(result[1]));
+                stateAnger.setOption(JSON.parse(result[2]));
+            }
         });
+        $(this).parent().parent().parent().remove();
+    });
 
-        $(".delete-anger").click(function (event) {
-            event.stopPropagation();
-            $("#gradChart").parent().html("<div id=\"gradChart\" style=\"width:500px; height:300px;\"></div>" +
-                "<div id=\"kdeChart\" style=\"width:500px; height:300px;\"></div>" +
-                "<div id=\"stateAngerChart\" style=\"width:500px; height:300px;\"></div>");
-            var grad = echarts.init(document.getElementById('gradChart'), 'white', {renderer: 'canvas'});
-            var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
-            var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
-
-            var name = $(this).parent().parent().parent().find("td").first().text();
-            var description = $(this).parent().parent().parent().find("td").first().next().text()
-            $.ajax({
-                type: "POST",
-                url: "/deleteMember",
-                dataType: 'json',
-                contentType: 'application/json;charset = utf-8',
-                data: JSON.stringify({
-                    peoplename: name,
-                    description: description
-                }),
-                success: function (result) {
-                    grad.setOption(JSON.parse(result[0]));
-                    kde.setOption(JSON.parse(result[1]));
-                    stateAnger.setOption(JSON.parse(result[2]));
-                }
-            });
-            $(this).parent().parent().parent().remove();
-        });
-
-        $('.edit-anger').click(function (event) {
-            event.stopPropagation();
-            $("#editModal").modal('show');
-            var name = $(this).parent().parent().parent().find("td").first().text();
-            var description = $(this).parent().parent().parent().find("td").first().next().text();
-            curname = name;
-            curdescription = description;
-            $.ajax({
-                type: "POST",
-                url: "/searchMember",
-                dataType: 'json',
-                contentType: 'application/json;charset = utf-8',
-                data: JSON.stringify({
-                    peoplename: name,
-                    description: description
-                }),
-                success: function (result) {
-                    console.log(result)
-                    $("#editModal option[value=" + result['peoplename'] + "]").attr('selected', true);
-                    $("#editModal input[name='soft']").val(result['soft']);
-                    $("#editModal input[name='low']").val(result['low']);
-                    $("#editModal input[name='high']").val(result['high']);
-                    if ($.isArray(result['time_overlap'])) {
-                        if ($("#editModal a.add-middle").parent().parent().find("button").first().text() !== "Range") {
-                            $("#editModal a.add-middle").parent().parent().find("button").first().text("Range");
-                            $("#editModal a.add-middle").parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">");
-                        }
-                        $("#editModal input[name='time_overlap1']").val(result['time_overlap'][0]);
-                        $("#editModal input[name='time_overlap2']").val(result['time_overlap'][1])
-                    } else {
-                        $("#editModal input[name='time_overlap1']").val(result['time_overlap']);
+    $('.edit-anger').click(function (event) {
+        event.stopPropagation();
+        $("#editModal").modal('show');
+        var name = $(this).parent().parent().parent().find("td").first().text();
+        var description = $(this).parent().parent().parent().find("td").first().next().text();
+        curname = name;
+        curdescription = description;
+        $.ajax({
+            type: "POST",
+            url: "/searchMember",
+            dataType: 'json',
+            contentType: 'application/json;charset = utf-8',
+            data: JSON.stringify({
+                peoplename: name,
+                description: description
+            }),
+            success: function (result) {
+                //peoplename
+                $("#editModal option").prop("selected", false);
+                $("#editModal option[value=" + result['peoplename'] + "]").prop('selected', true);
+                //soft
+                $("#editModal input[name='soft']").val(result['soft']);
+                //low
+                $("#editModal input[name='low']").val(result['low']);
+                //high
+                $("#editModal input[name='high']").val(result['high']);
+                //time overlap
+                if ($.isArray(result['time_overlap'])) {//is Range
+                    if ($("#editModal a.add-middle").parent().parent().find("button").first().text() !== "Range") {
+                        $("#editModal a.add-middle").parent().parent().find("button").first().text("Range");
+                        $("#editModal a.add-middle").parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">");
                     }
-                    $("#editModal input[name='auto_level']").val(result['auto_level']);
-                    $("#editModal input:radio[value=" + result['mode'] + "]").attr("checked", true);
-                    if (result['use_fix'])
-                        $("#editModal input[name='use_fix']").attr("checked", true);
+                    $("#editModal input[name='time_overlap1']").val(result['time_overlap'][0]);
+                    $("#editModal input[name='time_overlap2']").val(result['time_overlap'][1])
+                } else {//is Middle
+                    $("#editModal a.add-range").parent().parent().find("button").first().text("Middle");
+                    $("#editModal a.add-range").parent().parent().parent().find("input").first().next().remove();
+                    $("#editModal input[name='time_overlap1']").val(result['time_overlap']);
                 }
-            })
-        });
-    })
+                //auto level
+                $("#editModal input[name='auto_level']").val(result['auto_level']);
+                //mode
+                $("#editModal input:radio").prop("checked", false)
+                $("#editModal input:radio[value=" + result['mode'] + "]").prop("checked", true);
+                //user_fix
+                if (result['use_fix'])
+                    $("#editModal input[name='use_fix']").prop("checked", true);
+                else
+                    $("#editModal input[name='use_fix']").prop("checked", false);
+            }
+        })
+    });
+
+
 </script>
 <script>
     $(

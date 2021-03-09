@@ -105,7 +105,7 @@ class Anger:
                     event_clips[mode_value]['start_time'] -= self.time_overlap
             else:
                 start_offset, end_offset = self.time_overlap
-                event_clips[mode_value]['start_time'] -= start_offset
+                event_clips[mode_value]['start_time'] += start_offset
                 event_clips[mode_value]['end_time'] += end_offset
         CL = ['use_fix', 'auto_level']
         D = self._merge(CL)
@@ -139,9 +139,9 @@ class Anger:
         p2_list = ["soft", "low", "high"]
         p1_dict = {k: vd[k] for k in p1_list}
         p2_dict = {k: vd[k] for k in p2_list}
-        self.param = vd
         self.loaddata(**p1_dict)
         self.compute(**p2_dict)
+        self.param = vd
         return self
 
     def compute(self, soft=10, low=20, high=30):
@@ -212,146 +212,3 @@ class Anger:
         plt.rcParams['axes.unicode_minus'] = False
         plt.plot(self.output['AC'].times, self.output['FC'], label=self.peoplename)
         plt.legend()
-
-
-def getpeoplelist(location: str):
-    p = Path(location)
-    peoplelist = []
-    for i in p.iterdir():
-
-        if (i.is_dir() and (i / 'event.txt').exists() and (i / 'data.bdf').exists()) is True:
-            peoplelist.append(str(i.name))
-    return peoplelist
-
-
-def get_description(peoplename: str, value_dict: dict):
-    value_dict.setdefault('mode', 'S1')
-    value_dict.setdefault('use_fix', True)
-    value_dict.setdefault('auto_level', 2)
-    value_dict.setdefault('time_overlap', 150)
-    value_dict.setdefault('soft', 10)
-    value_dict.setdefault('low', 20)
-    value_dict.setdefault('high', 30)
-
-    Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'low', 'high')
-
-    if value_dict[Value[1]] == True:
-        returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(l=' + str(
-            value_dict[Value[2]]) + ',T=' + str(value_dict[Value[3]]) + ',s=' + str(
-            value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
-        return returnstr
-    else:
-        returnstr = peoplename + '[' + str(value_dict[Value[0]]) + ']' + '(T=' + str(
-            value_dict[Value[3]]) + ',s=' + str(
-            value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
-        return returnstr
-
-# va = {}
-# peoplename = 'sacassdv'
-# va['mode'] = 'ds'
-# va['use_fix'] = True
-# va['auto_level'] = 2
-# va['time_overlap'] = 52525
-# va['soft'] = 10
-# va['low'] = 20
-# va['high'] = 30
-# a = get_description(peoplename, va)
-# a = getpeoplelist(r'C:\Users\Administrator.DESKTOP-4OF79TT\Desktop\新建文件夹')
-#
-# a = Anger().loaddata('02szc').compute()
-# _a = [a]
-# a1 = Anger(_a).loaddata('02szc').compute()
-# _a = [a, a1]
-# a2 = Anger(_a).loaddata('02szc', auto_level=3).compute()
-
-# a  = Anger().loaddata(peoplename='01zlh', time_overlap=(300, 300)).compute()
-# b  = Anger().loaddata(peoplename='02szc', time_overlap=(300, 300)).compute()
-#
-# plt.rcParams['font.sans-serif'] = ['SimHei']
-# plt.rcParams['axes.unicode_minus'] = False
-# plt.plot(a.output['AC'].times[1:a.output['FC'].size], a.output['Grad_FC'], label=a.peoplename)
-# plt.legend()
-# plt.show()
-# Grad_l = (
-#     Line()
-#     .add_xaxis(xaxis_data=a.output['AC'].times[1:a.output['FC'].size])
-#     .add_yaxis(
-#         y_axis=a.output['Grad_FC'],
-#         series_name=a.peoplename,
-#         is_symbol_show=False
-#     )
-#     .add_yaxis(
-#         y_axis=b.output['Grad_FC'],
-#         series_name=b.peoplename,
-#         is_symbol_show=False
-#     )
-#     .set_series_opts(
-#         label_opts=opts.LabelOpts(is_show=False)
-#     )
-#     .set_global_opts(
-#         title_opts=opts.TitleOpts(title="Grad"),
-#         axispointer_opts=opts.AxisPointerOpts(
-#             is_show=True, link=[{"xAxisIndex": "all"}]
-#         ),
-#         xaxis_opts=opts.AxisOpts(
-#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True),
-#             is_scale=False
-#         ),
-#     )
-#     .render("test.html")
-# )
-#
-# plt.rcParams['font.sans-serif'] = ['SimHei']
-# plt.rcParams['axes.unicode_minus'] = False
-# plt.plot(a.output['X'], a.output['dens'], label=a.peoplename)
-# plt.tick_params(labelsize=20)
-# font = {'size': 20}
-# plt.xlabel('变量', font)
-# plt.ylabel('概率密度函数', font)
-# plt.legend(fontsize=15)
-# kde_l = (
-#     Line()
-#     .add_xaxis(xaxis_data=a.output['X'])
-#     .add_yaxis(
-#         y_axis=a.output['dens'],
-#         series_name=a.peoplename,
-#         is_symbol_show=False
-#     )
-#     .set_series_opts(
-#         label_opts=opts.LabelOpts(is_show=False)
-#     )
-#     .set_global_opts(
-#         title_opts=opts.TitleOpts(title="概率密度函数"),
-#         axispointer_opts=opts.AxisPointerOpts(
-#             is_show=True, link=[{"xAxisIndex": "all"}]
-#         ),
-#         xaxis_opts=opts.AxisOpts(
-#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True),
-#             is_scale=False
-#         ),
-#     )
-#     .render("test.html")
-# )
-#
-# stateanger_l = (
-#     Line()
-#     .add_xaxis(xaxis_data=a.output['AC'].times)
-#     .add_yaxis(
-#         y_axis=a.output['FC'],
-#         series_name=a.peoplename,
-#         is_symbol_show=False
-#     )
-#     .set_series_opts(
-#         label_opts=opts.LabelOpts(is_show=False)
-#     )
-#     .set_global_opts(
-#         title_opts=opts.TitleOpts(title="??"),
-#         axispointer_opts=opts.AxisPointerOpts(
-#             is_show=True, link=[{"xAxisIndex": "all"}]
-#         ),
-#         xaxis_opts=opts.AxisOpts(
-#             axistick_opts=opts.AxisTickOpts(is_align_with_label=True)
-#         ),
-#     )
-#     .render("test.html")
-# )
