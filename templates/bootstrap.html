@@ -44,14 +44,14 @@
                         {% endif %}
                     <td>{{ user }}</td>
                     <td>{{ description }}</td>
-                    <td class="actions edit-anger">
+                    <td class="actions">
                         <a class="icon" href="#">
-                            <i class="bi-pencil-fill"></i>
+                            <i class="edit-anger bi-pencil-fill"></i>
                         </a>
                     </td>
-                    <td class="actions delete-anger">
+                    <td class="actions">
                         <a class="icon" href="#">
-                            <i class="bi-x-circle"></i>
+                            <i class="delete-anger bi-x-circle"></i>
                         </a>
                     </td>
                     </tr>
@@ -85,7 +85,7 @@
                         <h5>name</h5>
                         <select name="peoplename" class="form-control">
                             {% for items in peopleList %}
-                                <option>{{ items }}</option>
+                                <option value="{{ items }}">{{ items }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -153,7 +153,7 @@
                     <hr/>
                     <div class="form-group">
                         <label class="checkbox-inline">
-                            <input type="checkbox" value="1" name="use_fix"> use fix
+                            <input type="checkbox" name="use_fix"> use fix
                         </label>
                     </div>
                 </div>
@@ -186,18 +186,18 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="editLabel">添加数据</h4>
+                <h4 class="modal-title" id="editLabel">修改数据</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form action="/editMember" method="post">
+            <form id="editForm" action="/editMember" method="post">
                 <div class="modal-body">
                     <div class="form-group">
                         <h5>name</h5>
                         <select name="peoplename" class="form-control">
                             {% for items in peopleList %}
-                                <option>{{ items }}</option>
+                                <option value="{{ items }}">{{ items }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -269,28 +269,46 @@
                         </label>
                     </div>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                    <button type="submit" class="btn btn-primary" onclick="showLoading()">添加</button>
-                </div>
             </form>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="submit" class="btn btn-primary" onclick="submitEdit()">添加</button>
+            </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
 </div>
 
 <script>
+    var curname//用于修改表单提交时allPeopleList里的键
+    var curdescription
+
     function showLoading() {
         $('#loading').modal('show');
     }
 
+    function submitEdit() {
+        $('#editModal').modal('hide');
+        showLoading();
+        var form = $('#editForm');
+        var prename = $("<input type='text' name='prepeoplename' hidden/>");
+        var description = $("<input type='text' name='description' hidden/>");
+        prename.attr('value', curname);
+        description.attr('value', curdescription);
+        form.append(prename);
+        form.append(description);
+        form.submit();
+    }
+
     $(function () {
-        $(".add-iddle").click(function () {
+        $(".add-middle").click(function () {
+            console.log("click");
             $(this).parent().parent().find("button").first().text("Middle");
             $(this).parent().parent().parent().find("input").first().next().remove();
         });
 
         $(".add-range").click(function () {
+            console.log("click");
             if ($(this).parent().parent().find("button").first().text() !== "Range") {
                 $(this).parent().parent().find("button").first().text("Range");
                 $(this).parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">")
@@ -331,8 +349,8 @@
             var kde = echarts.init(document.getElementById('kdeChart'), 'white', {renderer: 'canvas'});
             var stateAnger = echarts.init(document.getElementById('stateAngerChart'), 'white', {renderer: 'canvas'});
 
-            var name = $(this).parent().find("td").first().text();
-            var description = $(this).parent().find("td").first().next().text()
+            var name = $(this).parent().parent().parent().find("td").first().text();
+            var description = $(this).parent().parent().parent().find("td").first().next().text()
             $.ajax({
                 type: "POST",
                 url: "/deleteMember",
@@ -348,14 +366,16 @@
                     stateAnger.setOption(JSON.parse(result[2]));
                 }
             });
-            $(this).parent().remove();
+            $(this).parent().parent().parent().remove();
         });
 
         $('.edit-anger').click(function (event) {
             event.stopPropagation();
-            $('#editModal').modal('show');
-            var name = $(this).parent().find("td").first().text();
-            var description = $(this).parent().find("td").first().next().text()
+            $("#editModal").modal('show');
+            var name = $(this).parent().parent().parent().find("td").first().text();
+            var description = $(this).parent().parent().parent().find("td").first().next().text();
+            curname = name;
+            curdescription = description;
             $.ajax({
                 type: "POST",
                 url: "/searchMember",
@@ -366,10 +386,25 @@
                     description: description
                 }),
                 success: function (result) {
-                    $("#changeModal input[name='name']").val(name);
-                    $("#changeModal input[name='param1']").val(result['param1']);
-                    $("#changeModal input[name='param2']").val(result['param2']);
-                    $("#changeModal input[name='param3']").val(result['param3']);
+                    console.log(result)
+                    $("#editModal option[value=" + result['peoplename'] + "]").attr('selected', true);
+                    $("#editModal input[name='soft']").val(result['soft']);
+                    $("#editModal input[name='low']").val(result['low']);
+                    $("#editModal input[name='high']").val(result['high']);
+                    if ($.isArray(result['time_overlap'])) {
+                        if ($("#editModal a.add-middle").parent().parent().find("button").first().text() !== "Range") {
+                            $("#editModal a.add-middle").parent().parent().find("button").first().text("Range");
+                            $("#editModal a.add-middle").parent().parent().parent().append("<input type=\"text\" class=\"form-control\" name=\"time_overlap2\">");
+                        }
+                        $("#editModal input[name='time_overlap1']").val(result['time_overlap'][0]);
+                        $("#editModal input[name='time_overlap2']").val(result['time_overlap'][1])
+                    } else {
+                        $("#editModal input[name='time_overlap1']").val(result['time_overlap']);
+                    }
+                    $("#editModal input[name='auto_level']").val(result['auto_level']);
+                    $("#editModal input:radio[value=" + result['mode'] + "]").attr("checked", true);
+                    if (result['use_fix'])
+                        $("#editModal input[name='use_fix']").attr("checked", true);
                 }
             })
         });

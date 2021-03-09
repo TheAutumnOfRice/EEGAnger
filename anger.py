@@ -33,7 +33,7 @@ class Anger:
         self.mode = ""
         self.output = {}
         self.peoplename = ""
-        self.param={}
+        self.param = {}
         self._a = _a
 
     @staticmethod
@@ -117,9 +117,9 @@ class Anger:
 
         return self
 
-    def get_description(self, value_dict: Optional[dict]):
+    def get_description(self, value_dict: Optional[dict] = None):
         if value_dict is None:
-            assert len(self.param)>0
+            assert len(self.param) > 0
             value_dict = self.param
         Value = ('mode', 'use_fix', 'auto_level', 'time_overlap', 'soft', 'low', 'high')
 
@@ -134,11 +134,11 @@ class Anger:
                 value_dict[Value[4]]) + ',FB:' + str(value_dict[Value[5]]) + '-' + str(value_dict[Value[6]]) + ')'
             return returnstr
 
-    def get_param(self, vd: dict):
+    def make(self, vd: dict):
         p1_list = ["peoplename", "time_overlap", "mode", "use_fix", "auto_level"]
-        p2_list = ["soft","low","high"]
-        p1_dict = {k:vd[k] for k in p1_list}
-        p2_dict = {k:vd[k] for k in p2_list}
+        p2_list = ["soft", "low", "high"]
+        p1_dict = {k: vd[k] for k in p1_list}
+        p2_dict = {k: vd[k] for k in p2_list}
         self.param = vd
         self.loaddata(**p1_dict)
         self.compute(**p2_dict)

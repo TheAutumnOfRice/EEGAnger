@@ -2,7 +2,6 @@ import json
 
 from flask import Flask, render_template, request
 
-
 from anger import Anger
 from getcharts import *
 from config import data_dir
@@ -53,11 +52,11 @@ def delete_member():
     return get_chart()
 
 
-@app.route("/searchMember",methods=['POST'])
+@app.route("/searchMember", methods=['POST'])
 def search_member():
     data = request.get_data(as_text=True)
     data = json.loads(data)
-    paramList = allPeopleList[data['peoplename']][data['description']]['data'].get_param()
+    paramList = allPeopleList[data['peoplename']][data['description']]['data'].param
     return json.dumps(paramList)
 
 
@@ -76,31 +75,79 @@ def set_member():
         use_fix = False
 
     if 'time_overlap2' in request.form:
-        a = Anger().loaddata(peoplename=peoplename,
-                             time_overlap=(time_overlap1, int(request.form['time_overlap2'])),
-                             mode=mode,
-                             use_fix=use_fix,
-                             auto_level=auto_level
-                             ).compute(soft=soft, low=low, high=high)
-        description = a.get_description()
+        a = Anger().make({
+            'peoplename': peoplename,
+            'time_overlap': (time_overlap1, int(request.form['time_overlap2'])),
+            'mode': mode,
+            'use_fix': use_fix,
+            'auto_level': auto_level,
+            'soft': soft,
+            'low': low,
+            'high': high
+        })
     else:
-        a = Anger().loaddata(peoplename=peoplename,
-                             time_overlap=time_overlap1,
-                             mode=mode,
-                             use_fix=use_fix,
-                             auto_level=auto_level
-                             ).compute(soft=soft, low=low, high=high)
-        description = a.get_description()
+        a = Anger().make({
+            'peoplename': peoplename,
+            'time_overlap': time_overlap1,
+            'mode': mode,
+            'use_fix': use_fix,
+            'auto_level': auto_level,
+            'soft': soft,
+            'low': low,
+            'high': high
+        })
 
-        if peoplename not in allPeopleList:
-            allPeopleList[peoplename] = {}
-        allPeopleList[peoplename][description] = {'data': a, 'active': True}
-        return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
+    description = a.get_description()
+    if peoplename not in allPeopleList:
+        allPeopleList[peoplename] = {}
+    allPeopleList[peoplename][description] = {'data': a, 'active': True}
+    return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
 
 
 @app.route("/editMember", methods=['POST'])
 def edit_member():
-    return "1"
+    # get origin object
+    data = allPeopleList[request.form['prepeoplename']][request.form['description']]['data']
+    activeState = allPeopleList[request.form['prepeoplename']][request.form['description']]['active']
+    # process form
+    peoplename = request.form['peoplename']
+    soft = int(request.form['soft'])
+    low = int(request.form['low'])
+    high = int(request.form['high'])
+    time_overlap1 = int(request.form['time_overlap1'])
+    mode = request.form['mode']
+    auto_level = int(request.form['auto_level'])
+    if 'use_fix' in request.form:
+        use_fix = True
+    else:
+        use_fix = False
+
+    if 'time_overlap2' in request.form:
+        data = data.make({
+            'peoplename': peoplename,
+            'time_overlap': (time_overlap1, int(request.form['time_overlap2'])),
+            'mode': mode,
+            'use_fix': use_fix,
+            'auto_level': auto_level,
+            'soft': soft,
+            'low': low,
+            'high': high
+        })
+    else:
+        data = data.make({
+            'peoplename': peoplename,
+            'time_overlap': time_overlap1,
+            'mode': mode,
+            'use_fix': use_fix,
+            'auto_level': auto_level,
+            'soft': soft,
+            'low': low,
+            'high': high
+        })
+
+    del allPeopleList[request.form['prepeoplename']][request.form['description']]
+    allPeopleList[peoplename][data.get_description()] = {'data': data, 'active': activeState}
+    return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
     # Param[request.args['name']] = {
     #     'param1': request.args['param1'],
     #     'param2': request.args['param2'],
