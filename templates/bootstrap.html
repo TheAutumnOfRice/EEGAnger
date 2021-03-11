@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <style>
-        .modal{overflow:auto!important;}
+        .modal {
+            overflow: auto !important;
+        }
     </style>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -85,77 +87,96 @@
                         <h5>name</h5>
                         <select name="peoplename" class="form-control">
                             {% for items in peopleList %}
-                                <option value="{{ items }}">{{ items }}</option>
+                                {% if items == previousSetting['peoplename'] %}
+                                    <option value="{{ items }}" selected>{{ items }}</option>
+                                {% else %}
+                                    <option value="{{ items }}">{{ items }}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <h5>soft</h5>
-                        <input class="form-control" name="soft" value="10" type="text">
+                        <h5>model</h5>
+                        {% for i in range(6) %}
+                        <label class="radio-inline">
+                            {% if previousSetting['mode'][1] == (i + 1)|string %}
+                                <input type="radio" value="S{{ i + 1 }}" name="mode" checked> S{{ i + 1 }}
+                            {% else %}
+                                <input type="radio" value="S{{ i + 1 }}" name="mode"> S{{ i + 1 }}
+                            {% endif %}
+                        </label>
+                        {% endfor %}
                     </div>
 
                     <div class="form-group">
-                        <h5>low</h5>
-                        <input class="form-control" name="low" value="20" type="text">
+                        <h5>description</h5>
+                        <textarea class="form-control" name="description" type="text"
+                                  placeholder="You can custom your description.."></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <h5>high</h5>
-                        <input class="form-control" name="high" value="30" type="text">
-                    </div>
+                    <hr/>
 
-                    <div class="form-group">
-                        <h5>time-overlap</h5>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Middle
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a class="add-middle dropdown-item">Middle</a>
-                                    <a class="add-range dropdown-item">Range</a>
+                    <span id="addMoreParam" style="display:none">
+                        <div class="form-group">
+                            <h5>soft</h5>
+                            <input class="form-control" name="soft" value="{{ previousSetting['soft'] }}" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>low</h5>
+                            <input class="form-control" name="low" value="{{ previousSetting['low'] }}" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>high</h5>
+                            <input class="form-control" name="high" value="{{ previousSetting['high'] }}" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>time-overlap</h5>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {% if previousSetting['time_overlap'] is iterable %}
+                                            Range
+                                        {% else %}
+                                            Middle
+                                        {% endif %}
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="add-middle dropdown-item">Middle</a>
+                                        <a class="add-range dropdown-item">Range</a>
+                                    </div>
+                                </div><!-- /btn-group -->
+                                {% if previousSetting['time_overlap'] is iterable %}
+                                    <input type="text" class="form-control" name="time_overlap1" value="{{ previousSetting['time_overlap'][0] }}">
+                                    <input type="text" class="form-control" name="time_overlap2" value="{{ previousSetting['time_overlap'][1] }}">
+                                {% else %}
+                                    <input type="text" class="form-control" name="time_overlap1" value="{{ previousSetting['time_overlap'] }}">
+                                {% endif %}
+                            </div><!-- /input-group -->
+                        </div>
+
+                        <div class="form-group">
+                            <h5>use_fix & auto_level</h5>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        {% if previousSetting['use_fix'] %}
+                                            <input type="checkbox" name="use_fix" checked/>
+                                        {% else %}
+                                            <input type="checkbox" name="use_fix"/>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                            </div><!-- /btn-group -->
+                                <input class="form-control" name="auto_level" value="{{ previousSetting['auto_level'] }}" type="text">
+                            </div>
+                        </div>
+                    </span>
 
-                            <input type="text" class="form-control" name="time_overlap1">
-                        </div><!-- /input-group -->
-                    </div>
+                    <button id="addDisplayAll" type="button" class="btn btn-primary btn-block">Show More...</button>
 
-                    <div class="form-group">
-                        <h5>auto_level</h5>
-                        <input class="form-control" name="auto_level" value="2" type="text">
-                    </div>
-
-                    <hr/>
-                    <h5>model</h5>
-                    <div class="form-group">
-                        <label class="radio-inline">
-                            <input type="radio" value="S1" name="mode"> S1
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" value="S2" name="mode"> S2
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" value="S3" name="mode"> S3
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" value="S4" name="mode"> S4
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" value="S5" name="mode"> S5
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" value="S6" name="mode"> S6
-                        </label>
-                    </div>
-
-                    <hr/>
-                    <div class="form-group">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" name="use_fix"> use fix
-                        </label>
-                    </div>
                 </div>
             </form>
 
@@ -189,45 +210,7 @@
                     </div>
 
                     <div class="form-group">
-                        <h5>soft</h5>
-                        <input class="form-control" name="soft" type="text">
-                    </div>
-
-                    <div class="form-group">
-                        <h5>low</h5>
-                        <input class="form-control" name="low" type="text">
-                    </div>
-
-                    <div class="form-group">
-                        <h5>high</h5>
-                        <input class="form-control" name="high" type="text">
-                    </div>
-
-                    <div class="form-group">
-                        <h5>time-overlap</h5>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Middle
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a class="add-middle dropdown-item">Middle</a>
-                                    <a class="add-range dropdown-item">Range</a>
-                                </div>
-                            </div><!-- /btn-group -->
-
-                            <input type="text" class="form-control" name="time_overlap1">
-                        </div><!-- /input-group -->
-                    </div>
-
-                    <div class="form-group">
-                        <h5>auto_level</h5>
-                        <input class="form-control" name="auto_level" type="text">
-                    </div>
-
-                    <hr/>
-                    <h5>model</h5>
-                    <div class="form-group">
+                        <h5>model</h5>
                         <label class="radio-inline">
                             <input type="radio" value="S1" name="mode"> S1
                         </label>
@@ -248,18 +231,67 @@
                         </label>
                     </div>
 
-                    <hr/>
                     <div class="form-group">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" value="1" name="use_fix"> use fix
-                        </label>
+                        <h5>description</h5>
+                        <textarea class="form-control" name="description" type="text"
+                                  placeholder="You can custom your description.."></textarea>
                     </div>
+
+                    <hr/>
+
+                    <span id="editMoreParam" style="display:none">
+                        <div class="form-group">
+                            <h5>soft</h5>
+                            <input class="form-control" name="soft" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>low</h5>
+                            <input class="form-control" name="low" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>high</h5>
+                            <input class="form-control" name="high" type="text">
+                        </div>
+
+                        <div class="form-group">
+                            <h5>time-overlap</h5>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Middle
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="add-middle dropdown-item">Middle</a>
+                                        <a class="add-range dropdown-item">Range</a>
+                                    </div>
+                                </div><!-- /btn-group -->
+
+                                <input type="text" class="form-control" name="time_overlap1">
+                            </div><!-- /input-group -->
+                        </div>
+
+                        <div class="form-group">
+                        <h5>use_fix & auto_level</h5>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" name="use_fix"/>
+                                </div>
+                            </div>
+                            <input class="form-control" name="auto_level" value="2" type="text">
+                        </div>
+                    </div>
+                    </span>
+
+                    <button id="editDisplayAll" type="button" class="btn btn-primary btn-block">Show More...</button>
                 </div>
             </form>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                <button type="submit" class="btn btn-primary" onclick="submitEdit()">添加</button>
+                <button type="submit" class="btn btn-primary" onclick="submitEdit()">修改</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
@@ -310,11 +342,11 @@
         $('#loading').modal('show');
         var form = $('#editForm');
         var prename = $("<input type='text' name='prepeoplename' hidden/>");
-        var description = $("<input type='text' name='description' hidden/>");
+        var predescription = $("<textarea type='text' name='predescription' hidden/>");
         prename.prop('value', curname);
-        description.prop('value', curdescription);
+        predescription.prop('value', curdescription);
         form.append(prename);
-        form.append(description);
+        form.append(predescription);
         $.ajax({
             type: "POST",
             url: "/editMember",
@@ -445,10 +477,27 @@
                     $("#editModal input[name='use_fix']").prop("checked", true);
                 else
                     $("#editModal input[name='use_fix']").prop("checked", false);
+                //description
+                $("#editModal textarea[name='description']").val(curdescription);
             }
         })
     });
 
+    $('#addDisplayAll').click(function (){
+        $('#addMoreParam').slideToggle('slow');
+        if($(this).text() === "Pack up")
+            $(this).text("Show More...")
+        else
+            $(this).text("Pack up")
+    });
+
+    $('#editDisplayAll').click(function (){
+        $('#editMoreParam').slideToggle('slow');
+        if($(this).text() === "Pack up")
+            $(this).text("Show More...")
+        else
+            $(this).text("Pack up")
+    });
 
 </script>
 <script>

@@ -11,6 +11,32 @@ app = Flask(__name__, static_folder="templates")
 # name 下面加入description 不写入就默认 写入就修改
 
 allPeopleList = {}
+previousSetting = {
+    'peoplename': "",
+    'time_overlap': 0,
+    'mode': "S1",
+    'use_fix': False,
+    'auto_level': 2,
+    'soft': 10,
+    'low': 15,
+    'high': 30
+}
+
+
+# MODE = ["S1","S2","S3","S4","S5","S6"]
+# allPeopleList["02szc"] = {}
+# for m in MODE:
+#     data = Anger().make({
+#                 'peoplename': "02szc",
+#                 'time_overlap': 0,
+#                 'mode': m,
+#                 'use_fix': False,
+#                 'auto_level': 2,
+#                 'soft': 10,
+#                 'low': 15,
+#                 'high': 30
+#             })
+#     allPeopleList["02szc"][data.get_description()] = {'data':data,"active":True}
 
 
 # user(zy) ->{
@@ -22,7 +48,8 @@ allPeopleList = {}
 
 @app.route("/")
 def bootstrap():
-    return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList)
+    return render_template("bootstrap.html", peopleList=Anger.getpeoplelist(data_dir), allPeopleList=allPeopleList,
+                           previousSetting=previousSetting)
 
 
 @app.route("/getChart")
@@ -31,8 +58,7 @@ def get_chart():
     kde_l = GetKde(allPeopleList)
     stateanger_l = GetStateAnger(allPeopleList)
 
-    list = json.dumps([Grad_l, kde_l, stateanger_l])
-    return list
+    return json.dumps([Grad_l, kde_l, stateanger_l])
 
 
 @app.route("/changeActive", methods=['POST'])
@@ -69,14 +95,20 @@ def set_member():
         high = int(request.form['high'])
         time_overlap1 = int(request.form['time_overlap1'])
         mode = request.form['mode']
-        auto_level = int(request.form['auto_level'])
         if 'use_fix' in request.form:
             use_fix = True
+            auto_level = int(request.form['auto_level'])
         else:
             use_fix = False
+            auto_level = 2
+
+        a_sameName = []
+        if peoplename in allPeopleList:
+            for i in allPeopleList[peoplename]:
+                a_sameName.append(allPeopleList[peoplename][i]['data'])
 
         if 'time_overlap2' in request.form:
-            a = Anger().make({
+            previousSetting.update({
                 'peoplename': peoplename,
                 'time_overlap': (time_overlap1, int(request.form['time_overlap2'])),
                 'mode': mode,
@@ -86,8 +118,9 @@ def set_member():
                 'low': low,
                 'high': high
             })
+            a = Anger(a_sameName).make(previousSetting)
         else:
-            a = Anger().make({
+            previousSetting.update({
                 'peoplename': peoplename,
                 'time_overlap': time_overlap1,
                 'mode': mode,
@@ -97,7 +130,11 @@ def set_member():
                 'low': low,
                 'high': high
             })
-        description = a.get_description()
+            a = Anger(a_sameName).make(previousSetting)
+        if request.form['description'] == "":
+            description = a.get_description()
+        else:
+            description = request.form['description']
     except Exception as e:
         return json.dumps(str(e))
     else:
@@ -111,8 +148,8 @@ def set_member():
 def edit_member():
     try:
         # get origin object
-        data = allPeopleList[request.form['prepeoplename']][request.form['description']]['data']
-        activeState = allPeopleList[request.form['prepeoplename']][request.form['description']]['active']
+        data = allPeopleList[request.form['prepeoplename']][request.form['predescription']]['data']
+        activeState = allPeopleList[request.form['prepeoplename']][request.form['predescription']]['active']
         # process form
         peoplename = request.form['peoplename']
         soft = int(request.form['soft'])
@@ -120,14 +157,20 @@ def edit_member():
         high = int(request.form['high'])
         time_overlap1 = int(request.form['time_overlap1'])
         mode = request.form['mode']
-        auto_level = int(request.form['auto_level'])
         if 'use_fix' in request.form:
             use_fix = True
+            auto_level = int(request.form['auto_level'])
         else:
             use_fix = False
+            auto_level = 2
+
+        a_sameName = []
+        if peoplename in allPeopleList:
+            for i in allPeopleList[peoplename]:
+                a_sameName.append(allPeopleList[peoplename][i]['data'])
 
         if 'time_overlap2' in request.form:
-            data = data.make({
+            data = Anger(a_sameName).make({
                 'peoplename': peoplename,
                 'time_overlap': (time_overlap1, int(request.form['time_overlap2'])),
                 'mode': mode,
@@ -138,7 +181,7 @@ def edit_member():
                 'high': high
             })
         else:
-            data = data.make({
+            data = Anger(a_sameName).make({
                 'peoplename': peoplename,
                 'time_overlap': time_overlap1,
                 'mode': mode,
@@ -148,12 +191,17 @@ def edit_member():
                 'low': low,
                 'high': high
             })
+        if request.form['description'] == "":
+            description = data.get_description()
+        else:
+            description = request.form['description']
     except Exception as e:
         return json.dumps(str(e))
     else:
-        del allPeopleList[request.form['prepeoplename']][request.form['description']]
-        allPeopleList[peoplename][data.get_description()] = {'data': data, 'active': activeState}
+        del allPeopleList[request.form['prepeoplename']][request.form['predescription']]
+        allPeopleList[peoplename][description] = {'data': data, 'active': activeState}
         return json.dumps("SUCCESS")
+
 
 if __name__ == "__main__":
     app.run()

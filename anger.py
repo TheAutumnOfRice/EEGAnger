@@ -7,10 +7,6 @@ from getdata import *
 from preprocess import *
 from psdprocess import *
 
-from pyecharts import options as opts
-from pyecharts.charts import Line
-
-
 class FixFun:
     def __init__(self, use_fix=True, auto_level=2):
         self.use_fix = use_fix
