@@ -7,6 +7,7 @@ from getdata import *
 from preprocess import *
 from psdprocess import *
 
+
 class FixFun:
     def __init__(self, use_fix=True, auto_level=2):
         self.use_fix = use_fix
@@ -18,6 +19,11 @@ class FixFun:
             auto_fix(EPO, self.auto_level)
         return EPO
 
+def get_explist(angerlist, th):
+    exp = []
+    for i in range(1, len(angerlist)):
+        exp.append(angerlist[i].get_truncedExp(th[i]))
+    return exp
 
 ###dfs
 class Anger:
@@ -70,7 +76,7 @@ class Anger:
         self.use_fix = use_fix
         self.auto_level = auto_level
         # Merge Peoplename -> event_clips, raw
-        CL = ["peoplename"]
+        CL = ["peoplename", "mode", "time_overlap"]
         # CL.append("peoplename")
         D = self._merge(CL)
         if D is not None:
@@ -175,7 +181,7 @@ class Anger:
         X = self.output['X']
         e1 = X[X > threshold] * dens[X > threshold]
         e2 = X[X < -threshold] * dens[X < -threshold]
-        return np.sum(e1), np.sum(e2)
+        return (np.sum(e1), np.sum(e2))
 
     def get_middle(self, threshold=0.):
         c1 = self.output['Grad_FC'][self.output['Grad_FC'] >= threshold]
@@ -208,3 +214,11 @@ class Anger:
         plt.rcParams['axes.unicode_minus'] = False
         plt.plot(self.output['AC'].times, self.output['FC'], label=self.peoplename)
         plt.legend()
+
+
+a1 = Anger().loaddata('02szc').compute()
+a2 = Anger().loaddata('02szc').compute()
+a3 = Anger().loaddata('02szc').compute()
+l = [a1, a2, a3]
+ll = [1, 1, 1]
+get_explist(l, ll)
