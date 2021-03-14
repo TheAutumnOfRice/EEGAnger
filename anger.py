@@ -109,7 +109,7 @@ class Anger:
                 start_offset, end_offset = self.time_overlap
                 event_clips[mode_value]['start_time'] += start_offset
                 event_clips[mode_value]['end_time'] += end_offset
-        CL = ['use_fix', 'auto_level']
+        CL = ["peoplename", "mode", "time_overlap", 'use_fix', 'auto_level']
         D = self._merge(CL)
         if D is not None:
             S = D.output['S']
